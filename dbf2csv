@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import csv
+from dbfpy import dbf
+
+path = ""
+opts = []
+
+if len(sys.argv) == 1:
+    path = raw_input("Enter your path where your files are located (Ex: /Users/JohnCena/Downloads/)\n> ")
+else:
+    path = sys.argv[-1]
+    for arg in sys.argv:
+        if arg.startswith('-'):
+            for character in arg[1:]:
+                opts.append(character)
+
+if 'h' in opts:
+    print "-r Recursively search and convert .dbf files in the given directory."
+    print "-d Delete .dbf files after conversion"
+    sys.exit(0)
+
+def convert_dbf(in_db, csv_file):
+    out_csv = csv.writer(csv_file)
+    names = []
+    # creates the columns
+    for field in in_db.header.fields:
+        names.append(field.name)
+    out_csv.writerow(names)
+    # writes the rows
+    for rec in in_db:
+        out_csv.writerow(rec.fieldData)
+
+
+def convert_dbfs(localpath, _finished=True, _totalCount=0.0, _count=0):
+    if os.path.isdir(localpath):
+        # Find total number of files
+        if _finished:
+            for dirpath, dirname, filenames in os.walk(localpath):
+                for filename in filenames:
+                    if filename.endswith(".dbf"):
+                        _totalCount += 1
+        # Search for the items within the directory
+        for filename in os.listdir(localpath):
+            # if there is a directory, run method recursively
+            newpath = os.path.join(localpath, filename)
+            if os.path.isdir(newpath) and 'r' in opts:
+                _count = convert_dbfs(newpath, False, _totalCount, _count)
+            # if it is a .dbf file, convert to csv format
+            elif filename.endswith('.dbf'):
+                # create the csv file
+                csv_fn = localpath + '/' + filename[:-4] + ".csv"
+                with open(csv_fn, 'wb') as csv_file:
+                    in_db = dbf.Dbf(os.path.join(localpath, filename))
+                    convert_dbf(in_db, csv_file)
+                    in_db.close()
+                    if 'd' in opts:
+                        os.remove(localpath + '/' + filename)
+                    _count += 1
+
+                    # Printing stuff
+                    ratio = (_count / _totalCount)
+                    progressLength = int(ratio * 40)
+                    sys.stdout.write(
+                        '\r[' + ("=" * progressLength) + " " * (40 - progressLength) + ']%d' % (ratio * 100) + "%")
+                    sys.stdout.flush()
+
+        if _finished:
+            print "\nConversion finished. \n" + str(_count) + " files converted"
+
+        return _count
+
+    elif os.path.isfile(localpath):
+        with open(localpath[:-4] + ".csv", 'wb') as csv_file, dbf.Dbf(localpath) as in_db:
+            convert_dbf(in_db, csv_file)
+            if 'd' in opts:
+                os.remove(localpath)
+    else:
+        print "Neither file nor directory"
+
+print path
+print opts
+print "Starting Conversion"
+
+
+convert_dbfs(path)
