@@ -9,9 +9,9 @@ chmod +x dbf2csv #create permissions to run the script
 
 ./dbf2csv -h #for help options
 
-./dbf2csv -r #for recursively converting files
+./dbf2csv -r DIRECTORY_NAME_HERE #for recursively converting files
 
-./dbf2csv -d #for deleting the dbf files
+./dbf2csv -d DIRECTORY_NAME_HERE #for deleting the dbf files
 
-./dbf2csv -rd #to convert and delete the .dbf files after conversion
+./dbf2csv -rd DIRECTORY_NAME_HERE #to convert and delete the .dbf files after conversion
 ```
