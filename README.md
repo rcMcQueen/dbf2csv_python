@@ -1,17 +1,12 @@
-ReadMe
-------
-Put the file in your desired location
+# dbf2csv
 
-How To Run:
------------
-```bash
-chmod +x dbf2csv #create permissions to run the script
+Put the file somewhere the PATH environment variable will find it, and `chmod +x dbf2csv` it to make it executable.
 
-./dbf2csv -h #for help options
+## Usage:
+```
+dbf2csv [OPTION]... FILE
 
-./dbf2csv -r DIRECTORY/NAME/HERE #for recursively converting files
-
-./dbf2csv -d DIRECTORY/NAME/HERE #for deleting the dbf files
-
-./dbf2csv -rd DIRECTORY/NAME/HERE #to convert and delete the .dbf files after conversion
+  -r  Converts all files within directory recursively
+  
+  -d  Delete files after conversion
 ```
