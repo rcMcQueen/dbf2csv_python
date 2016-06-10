@@ -8,19 +8,21 @@ from dbfpy import dbf
 path = ""
 opts = []
 
-if len(sys.argv) == 1:
-    path = raw_input("Enter your path where your files are located (Ex: /Users/JohnCena/Downloads/)\n> ")
-else:
-    path = sys.argv[-1]
-    for arg in sys.argv:
-        if arg.startswith('-'):
-            for character in arg[1:]:
-                opts.append(character)
+for arg in sys.argv[1:]:
+    if arg.startswith('-'):
+        for character in arg[1:]:
+            opts.append(character)
+    else:
+        path = arg
 
 if 'h' in opts:
     print "-r Recursively search and convert .dbf files in the given directory."
     print "-d Delete .dbf files after conversion"
     sys.exit(0)
+
+if path == "":
+    path = raw_input("Enter your path where your files are located (Ex: /Users/Ryan/Downloads/)\n> ")
+
 
 def convert_dbf(in_db, csv_file):
     out_csv = csv.writer(csv_file)
@@ -30,24 +32,27 @@ def convert_dbf(in_db, csv_file):
         names.append(field.name)
     out_csv.writerow(names)
     # writes the rows
+
     for rec in in_db:
         out_csv.writerow(rec.fieldData)
 
 
-def convert_dbfs(localpath, _finished=True, _totalCount=0.0, _count=0):
+def convert_dbfs(localpath, _user_called=True, _total_count=0.0, _count=0):
     if os.path.isdir(localpath):
         # Find total number of files
-        if _finished:
+        if _user_called:
+            print "Counting total items"
             for dirpath, dirname, filenames in os.walk(localpath):
                 for filename in filenames:
                     if filename.endswith(".dbf"):
-                        _totalCount += 1
+                        _total_count += 1
+            print "Converting %d items..." % _total_count
         # Search for the items within the directory
         for filename in os.listdir(localpath):
             # if there is a directory, run method recursively
-            newpath = os.path.join(localpath, filename)
-            if os.path.isdir(newpath) and 'r' in opts:
-                _count = convert_dbfs(newpath, False, _totalCount, _count)
+            new_path = os.path.join(localpath, filename)
+            if os.path.isdir(new_path) and 'r' in opts:
+                _count = convert_dbfs(new_path, False, _total_count, _count)
             # if it is a .dbf file, convert to csv format
             elif filename.endswith('.dbf'):
                 # create the csv file
@@ -61,14 +66,14 @@ def convert_dbfs(localpath, _finished=True, _totalCount=0.0, _count=0):
                     _count += 1
 
                     # Printing stuff
-                    ratio = (_count / _totalCount)
-                    progressLength = int(ratio * 40)
+                    ratio = (_count / _total_count)
+                    progress_length = int(ratio * 40)
                     sys.stdout.write(
-                        '\r[' + ("=" * progressLength) + " " * (40 - progressLength) + ']%d' % (ratio * 100) + "%")
+                        '\r[' + ("=" * progress_length) + " " * (40 - progress_length) + ']%d' % (ratio * 100) + "%")
                     sys.stdout.flush()
 
-        if _finished:
-            print "\nConversion finished. \n" + str(_count) + " files converted"
+        if _user_called:
+            print "\nConversion finished. \n%d files converted" % _count
 
         return _count
 
@@ -80,9 +85,6 @@ def convert_dbfs(localpath, _finished=True, _totalCount=0.0, _count=0):
     else:
         print "Neither file nor directory"
 
-print path
-print opts
+
 print "Starting Conversion"
-
-
 convert_dbfs(path)
